@@ -12,9 +12,9 @@ while(1):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
     # Threshold for fire
-    sensitivity = 50
-    lower_fire = np.array([0,0,255-sensitivity], dtype=np.uint8)
-    upper_fire = np.array([60,sensitivity,255], dtype=np.uint8)
+    sensitivity = 100
+    lower_fire = np.array([0, 0, 255-sensitivity], dtype=np.uint8)
+    upper_fire = np.array([60, sensitivity, 255], dtype=np.uint8)
     
     mask = cv2.inRange(hsv, lower_fire, upper_fire)
     res = cv2.bitwise_and(frame, frame, mask= mask)
