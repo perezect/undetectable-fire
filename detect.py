@@ -2,8 +2,14 @@ import numpy as np
 import cv2
 
 cv2.ocl.setUseOpenCL(False)
-cap = cv2.VideoCapture('src/roman_candle.mp4')
+cap = cv2.VideoCapture('src/fire.mp4')
 fgbg = cv2.createBackgroundSubtractorMOG2()
+
+# fps = 15
+# capSize = (1028,720) # this is the size of my source video
+# fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') # note the lower case
+# out = cv2.VideoWriter()
+# success = out.open('output.mov',fourcc,fps,capSize,True)
 
 while(1):
     ret, frame = cap.read()
@@ -29,8 +35,19 @@ while(1):
     fgmask = fgbg.apply(res)
 
 
-    cv2.imshow('frame', frame)
     cv2.imshow('fgmask', fgmask)
+
+    im2, contours, hierarchy = cv2.findContours(fgmask,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+    num_contours = min(3, len(contours))
+
+    contours = sorted(contours, key = lambda x : x.size, reverse = True)
+
+    for i in range(num_contours):
+        cv2.drawContours(frame, contours, i, (0,0,255), 3)
+
+    cv2.imshow('contours', frame)
+    # out.write(frame)
 
     # Threshold for smoke
     # Likely needs tinkering of the hue values
@@ -49,4 +66,5 @@ while(1):
         break
 
 cap.release()
+# out.release()
 cv2.destroyAllWindows()
