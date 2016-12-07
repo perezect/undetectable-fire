@@ -2,14 +2,17 @@ import numpy as np
 import cv2
 
 cv2.ocl.setUseOpenCL(False)
-cap = cv2.VideoCapture('src/fire.mp4')
-fgbg = cv2.createBackgroundSubtractorMOG2()
-
-# fps = 15
-# capSize = (1028,720) # this is the size of my source video
-# fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') # note the lower case
-# out = cv2.VideoWriter()
-# success = out.open('output.mov',fourcc,fps,capSize,True)
+cap = cv2.VideoCapture('src/roman_candle.mp4')
+fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
+# try:
+fps = int(cap.get(cv2.CAP_PROP_FPS))/20
+capSize = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') # note the lower case
+out = cv2.VideoWriter()
+success = out.open('output.mov',fourcc,fps,capSize,True)
+# except:
+#     out = None
+#     pass
 
 while(1):
     ret, frame = cap.read()
@@ -47,7 +50,8 @@ while(1):
         cv2.drawContours(frame, contours, i, (0,0,255), 3)
 
     cv2.imshow('contours', frame)
-    # out.write(frame)
+    if out is not None:
+        out.write(frame)
 
     # Threshold for smoke
     # Likely needs tinkering of the hue values
@@ -66,5 +70,6 @@ while(1):
         break
 
 cap.release()
-# out.release()
+if out is not None:
+    out.release()
 cv2.destroyAllWindows()
