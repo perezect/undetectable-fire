@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 cv2.ocl.setUseOpenCL(False)
-cap = cv2.VideoCapture('src/roman_candle.mp4')
+cap = cv2.VideoCapture('src/fire.mp4')
 fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
 # try:
 fps = int(cap.get(cv2.CAP_PROP_FPS))/20
@@ -27,6 +27,10 @@ while(1):
 
     mask = cv2.inRange(hsv, lower_fire, upper_fire)
     res = cv2.bitwise_and(frame, frame, mask= mask)
+    
+    # DEMO PURPOSES
+    cv2.imshow('frame', frame)
+    #cv2.imshow('color_mask', res)
 
     # Threshold for smoke
     lower_smoke = np.array([200,200,200], dtype=np.uint8)
@@ -38,6 +42,7 @@ while(1):
     fgmask = fgbg.apply(res)
 
 
+    # Show background subtraction
     cv2.imshow('fgmask', fgmask)
 
     im2, contours, hierarchy = cv2.findContours(fgmask,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
@@ -49,7 +54,8 @@ while(1):
     for i in range(num_contours):
         cv2.drawContours(frame, contours, i, (0,0,255), 3)
 
-    cv2.imshow('contours', frame)
+    # Show contours
+    #cv2.imshow('contours', frame)
     if out is not None:
         out.write(frame)
 
