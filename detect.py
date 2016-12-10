@@ -1,21 +1,25 @@
 import numpy as np
 import cv2
+import os
 
 cv2.ocl.setUseOpenCL(False)
 cap = cv2.VideoCapture('src/fire.mp4')
 fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
 # try:
-fps = int(cap.get(cv2.CAP_PROP_FPS))/20
+fps = int(cap.get(cv2.CAP_PROP_FPS))
 capSize = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') # note the lower case
 out = cv2.VideoWriter()
 success = out.open('output.mov',fourcc,fps,capSize,True)
+out_bw = cv2.VideoWriter()
+success_2 = out_bw.open('output_bw.mov',fourcc,fps,capSize,True)
 # except:
 #     out = None
 #     pass
 
 while(1):
     ret, frame = cap.read()
+
 
     # Change colorspace from RGB to HSV (hue saturation value)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -44,6 +48,10 @@ while(1):
 
     # Show background subtraction
     cv2.imshow('fgmask', fgmask)
+    if out is not None:
+        cv2.imwrite("tmp.png", fgmask)
+        tmp = cv2.imread("tmp.png")
+        out_bw.write(tmp)
 
     im2, contours, hierarchy = cv2.findContours(fgmask,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
@@ -58,6 +66,7 @@ while(1):
     #cv2.imshow('contours', frame)
     if out is not None:
         out.write(frame)
+
 
     # Threshold for smoke
     # Likely needs tinkering of the hue values
@@ -75,7 +84,9 @@ while(1):
     if k == 27:
         break
 
+os.remove("tmp.png")
 cap.release()
 if out is not None:
     out.release()
+    out_bw.release()
 cv2.destroyAllWindows()
