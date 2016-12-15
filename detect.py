@@ -88,8 +88,8 @@ while(1):
 
     overlap = np.amax(intersection)
 
-    if overlap > 25:
-        thresh = np.array(np.where(intersection >= 25, 1, 0))
+    if overlap > 23:
+        thresh = np.array(np.where(intersection >= 23, 1, 0))
         im_thresh = np.array(thresh * 255, dtype = np.uint8)
         im_thresh = im_thresh.copy()
         # print thresh.shape
@@ -106,10 +106,16 @@ while(1):
             # and update the text
             (x, y, w, h) = cv2.boundingRect(c)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            text = "On fiya"
+            text = "Danger"
 
+    threat = overlap/3
     cv2.putText(frame, "Room Status: {}".format(text), (10, 20),
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+
+    cv2.putText(frame, "Threat Level: {}".format(threat), (10, 20),
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
 
     # Doesn't work lol
     # Threshold for smoke
