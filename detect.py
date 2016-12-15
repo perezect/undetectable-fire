@@ -90,11 +90,12 @@ while(1):
 
     if overlap > 25:
         thresh = np.array(np.where(intersection >= 25, 1, 0))
-        thresh = thresh.copy()
-        print thresh.shape
-        print fgmask.shape
+        im_thresh = np.array(thresh * 255, dtype = np.uint8)
+        im_thresh = im_thresh.copy()
+        # print thresh.shape
+        # print fgmask.shape
 
-        im3,  cnts, heir = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        im3,  cnts, heir = cv2.findContours(im_thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
         for c in cnts:
         # if the contour is too small, ignore it
@@ -123,7 +124,8 @@ while(1):
 
     # cv2.imshow('smmask', smmask)
 
-    # cv2.imshow('Is there a fire?', frame)
+    cv2.imshow('Is there a fire?', frame)
+
     if out is not None:
         out.write(frame)
 
