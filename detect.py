@@ -83,6 +83,8 @@ while(1):
 
     overlap = np.amax(intersection)
 
+    if overlap > 25:
+        pass
 
 
     # Doesn't work lol
