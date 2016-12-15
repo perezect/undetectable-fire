@@ -6,7 +6,7 @@ import os
 from collections import deque
 
 cv2.ocl.setUseOpenCL(False)
-cap = cv2.VideoCapture('src/fire.mp4')
+cap = cv2.VideoCapture('src/roman_candle.mp4')
 fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
 # try:
 fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -17,6 +17,7 @@ success = out.open('output.mov',fourcc,fps,capSize,True)
 out_bw = cv2.VideoWriter()
 success_2 = out_bw.open('output_bw.mov',fourcc,fps,capSize,True)
 prev_30 = deque()
+MIN_AREA = 500
 # except:
 #     out = None
 #     pass
@@ -24,7 +25,8 @@ prev_30 = deque()
 while(1):
     try:
         ret, frame = cap.read()
-    # Change colorspace from RGB to HSV (hue saturation value)
+        text = "Safe"
+        # Change colorspace from RGB to HSV (hue saturation value)
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     except:
         break
@@ -67,9 +69,7 @@ while(1):
         cv2.drawContours(frame, contours, i, (0,0,255), 3)
 
     # Show contours
-    cv2.imshow('contours', frame)
-    if out is not None:
-        out.write(frame)
+
 
     if len(prev_30) == 30:
         prev_30.popleft()
@@ -89,8 +89,26 @@ while(1):
     overlap = np.amax(intersection)
 
     if overlap > 25:
-        pass
+        thresh = np.array(np.where(intersection >= 25, 1, 0))
+        thresh = thresh.copy()
+        print thresh.shape
+        print fgmask.shape
 
+        im3,  cnts, heir = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+        for c in cnts:
+        # if the contour is too small, ignore it
+            if cv2.contourArea(c) < MIN_AREA:
+                continue
+
+            # compute the bounding box for the contour, draw it on the frame,
+            # and update the text
+            (x, y, w, h) = cv2.boundingRect(c)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            text = "On fiya"
+
+    cv2.putText(frame, "Room Status: {}".format(text), (10, 20),
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
     # Doesn't work lol
     # Threshold for smoke
@@ -104,6 +122,10 @@ while(1):
     # smmask = fgbg.apply(smres)
 
     # cv2.imshow('smmask', smmask)
+
+    # cv2.imshow('Is there a fire?', frame)
+    if out is not None:
+        out.write(frame)
 
     k = cv2.waitKey(30) & 0xff
     if k == 27:
