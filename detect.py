@@ -1,6 +1,9 @@
 import numpy as np
+import pylab as plt
 import cv2
 import os
+
+from collections import deque
 
 cv2.ocl.setUseOpenCL(False)
 cap = cv2.VideoCapture('src/roman_candle.mp4')
@@ -13,16 +16,18 @@ out = cv2.VideoWriter()
 success = out.open('output.mov',fourcc,fps,capSize,True)
 out_bw = cv2.VideoWriter()
 success_2 = out_bw.open('output_bw.mov',fourcc,fps,capSize,True)
+prev_30 = deque()
 # except:
 #     out = None
 #     pass
 
 while(1):
-    ret, frame = cap.read()
-
-
+    try:
+        ret, frame = cap.read()
     # Change colorspace from RGB to HSV (hue saturation value)
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    except:
+        break
 
     # Threshold for fire
     sensitivity = 100
@@ -42,7 +47,7 @@ while(1):
     fgmask = fgbg.apply(res)
 
 
-    cv2.imshow('fgmask', fgmask)
+    # cv2.imshow('fgmask', fgmask)
     if out is not None:
         cv2.imwrite("tmp.png", fgmask)
         tmp = cv2.imread("tmp.png")
@@ -52,7 +57,7 @@ while(1):
 
     num_contours = min(3, len(contours))
 
-    contours = sorted(contours, key = lambda x : x.size, reverse = True)
+    contours = sorted(contours, key = lambda x : x.size, reverse = True)[0:3]
 
     for i in range(num_contours):
         cv2.drawContours(frame, contours, i, (0,0,255), 3)
@@ -61,7 +66,26 @@ while(1):
     if out is not None:
         out.write(frame)
 
+    if len(prev_30) == 30:
+        prev_30.popleft()
+        prev_30.append(contours)
+    else:
+        prev_30.append(contours)
 
+    # create an image filled with zeros, single-channel, same size as img.
+    blank = np.zeros((capSize[1], capSize[0]))
+    intersection = blank.copy()
+
+    for lst in prev_30:
+        for index in range(len(lst)):
+            img = cv2.drawContours(blank.copy(), lst, index, 1, -1)
+            intersection = intersection + img
+
+    overlap = np.amax(intersection)
+
+
+
+    # Doesn't work lol
     # Threshold for smoke
     # Likely needs tinkering of the hue values
     # lower_smoke = np.array([200,200,200], dtype=np.uint8)
