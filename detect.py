@@ -1,5 +1,4 @@
 import numpy as np
-import pylab as plt
 import cv2
 import os
 import sys
@@ -36,7 +35,7 @@ def motion_detection(frame, fgbg):
 def largest_contours(number, frame):
 	im2, contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 	num_contours = min(number, len(contours))
-	contours = sorted(contours, key = lambda x : x.size, reverse = True)[0:3]
+	contours = sorted(contours, key = lambda x : x.size, reverse = True)[0:num_contours]
 	return contours
 
 def past_frame_queue(num_frames, previous_frames, contours):
@@ -60,6 +59,7 @@ def contour_intersection(threat_lvl, capSize, previous_frames, frame, area):
 	overlap = np.amax(intersection)
 
 	if overlap > threat_lvl:
+		text = "DANGER"
 		thresh = np.array(np.where(intersection >= threat_lvl, 1, 0))
 		im_thresh = np.array(thresh * 255, dtype = np.uint8)
 		im_thresh = im_thresh.copy()
@@ -77,9 +77,10 @@ def contour_intersection(threat_lvl, capSize, previous_frames, frame, area):
 	# and update the text
 			(x, y, w, h) = cv2.boundingRect(c)
 			cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-			text = "DANGER"
+
 
 	threat = min(overlap/3, 10.0)
+
 	cv2.putText(frame, "Room Status: {}".format(text), (10, 20),
 	cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
@@ -90,7 +91,7 @@ def main():
 	####################
 	## INITIALIZATION ##
 	####################
-	cv2.ocl.setUseOpenCL(False)	
+	cv2.ocl.setUseOpenCL(False)
 	# Background model using mixture of gradient models
 	# Shadow detection set to false as we are not concerned with shadows
 	fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
@@ -101,11 +102,11 @@ def main():
 		capSize = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') # note the lower case
 		out = cv2.VideoWriter()
-		
+
 		success = out.open('output.mov',fourcc,fps,capSize,True)
 		out_bw = cv2.VideoWriter()
 		success_2 = out_bw.open('output_bw.mov',fourcc,fps,capSize,True)
-		
+
 		num_frames = 30
 		previous_frames = deque()
 		MIN_AREA = 500
@@ -124,7 +125,7 @@ def main():
 				break
 			# Thresholding fire-color object
 			fire_extract_image = fire_color_thresh(frame, hsv)
-			
+
 			# DEMO PURPOSES
 			# cv2.imshow('frame', frame)
 			# cv2.imshow('color_mask', res)
