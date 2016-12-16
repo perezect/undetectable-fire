@@ -108,12 +108,12 @@ while(1):
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             text = "Danger"
 
-    threat = overlap/3
+    threat = min(overlap/3, 10.0)
     cv2.putText(frame, "Room Status: {}".format(text), (10, 20),
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
 
-    cv2.putText(frame, "Threat Level: {}".format(threat), (10, 20),
+    cv2.putText(frame, "Threat Level: {}".format(threat), (10, 40),
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
 
@@ -133,6 +133,8 @@ while(1):
     cv2.imshow('Is there a fire?', frame)
 
     if out is not None:
+        cv2.imwrite("tmp.png", frame)
+        tmp = cv2.imread("tmp.png")
         out.write(frame)
 
     k = cv2.waitKey(30) & 0xff
