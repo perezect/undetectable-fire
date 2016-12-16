@@ -6,12 +6,17 @@ import sys
 from collections import deque
 
 def convert_video_frame(frame):
+    # Converts from video-frame to image-frame
+    # input: video frame
+    # ret: image frame
 	cv2.imwrite("tmp.png", frame)
 	tmp = cv2.imread("tmp.png")
 	return tmp
 
 def fire_color_thresh(frame, hsv):
-	 # Threshold for fire
+	 # Uses an hsv colorspace to threshold for fire-colored objects
+     # in: video frame and hsv color space frame
+     # ret: image with only fire colored objects 
 	sensitivity = 1
 	lower_fire = np.array([0, 0, 255-sensitivity], dtype=np.uint8)
 	upper_fire = np.array([60, sensitivity, 255], dtype=np.uint8)
@@ -20,8 +25,12 @@ def fire_color_thresh(frame, hsv):
 	res = cv2.bitwise_and(frame, frame, mask= mask)
 	return res
 
-def smoke_thresh(frame):
-	# Threshold for smoke
+def smoke_thresh(frame, hsv):
+	# Uses an hsv colorspace to threshold for smoke-colored objects
+    # in: video frame and hsv color space frame
+    # ret: image with only smoke colored objects 
+    # NOTE: this color analysis does not work well, for effective smoke detection
+    # we require k-means clustering
 	lower_smoke = np.array([200,200,200], dtype=np.uint8)
 	upper_smoke = np.array([255,255,255], dtype=np.uint8)
 	smask = cv2.inRange(hsv, lower_smoke, upper_smoke)
@@ -29,16 +38,24 @@ def smoke_thresh(frame):
 	return res
 
 def motion_detection(frame, fgbg):
+    # Uses mixture of gradients to find foreground mask to detect motion
+    # in: video frame and background model
+    # ret: foreground mask
 	fgmask = fgbg.apply(frame)
 	return fgmask
 
 def largest_contours(number, frame):
+    # Finds a certian number of contours
+    # in: number of top contours, video frame
+    # ret: find top contours
 	im2, contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 	num_contours = min(number, len(contours))
 	contours = sorted(contours, key = lambda x : x.size, reverse = True)[0:num_contours]
 	return contours
 
 def past_frame_queue(num_frames, previous_frames, contours):
+    # Fill out a deque of past frames to compare to
+    # in: number of past frames, deque, and list of contours
 	if len(previous_frames) == num_frames:
 		previous_frames.popleft()
 		previous_frames.append(contours)
@@ -46,6 +63,9 @@ def past_frame_queue(num_frames, previous_frames, contours):
 		previous_frames.append(contours)
 
 def contour_intersection(threat_lvl, capSize, previous_frames, frame, area):
+    # Find overlapping contours and determined threat level and conditions of room
+    # Writes conditions and threats onto video frame
+    # in: amount of overlap threshold, size of capture, deque, video frame, and min area of contour
 	# Create an image filled with zeros, single-channel, same size as img.
 	text = "SAFE"
 	blank = np.zeros((capSize[1], capSize[0]))
